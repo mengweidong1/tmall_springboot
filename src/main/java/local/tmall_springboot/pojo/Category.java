@@ -22,8 +22,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties({ "handler", "hibernateLazyInitializer" })
 
 public class Category {
+    // @Id 标注用于声明一个实体类的属性映射为数据库的主键列
     @Id
+    // 用于标注主键的生成策略，通过strategy 属性指定; –IDENTITY：采用数据库ID自增长的方式来自增主键字段，
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // 用来标识实体类中属性与数据表中字段的对应关系
     @Column(name = "id")
     int id;
 
