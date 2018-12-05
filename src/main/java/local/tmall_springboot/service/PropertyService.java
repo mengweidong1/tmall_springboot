@@ -1,5 +1,7 @@
 package local.tmall_springboot.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,4 +50,8 @@ public class PropertyService {
 
     }
 
+    // 通过分类获取所有属性集合
+    public List<Property> listByCategory(Category category) {
+        return propertyDAO.findByCategory(category);
+    }
 }

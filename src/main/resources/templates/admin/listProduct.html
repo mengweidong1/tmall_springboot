@@ -111,7 +111,12 @@
 				<tbody>
 					<tr v-for="bean in beans ">
 						<td>{{bean.id}}</td>
-						<td></td>
+						<td>
+							<img
+								v-if="null != bean.firstProductImage"
+								width="40px"
+								:src="'img/productSingle/'+bean.firstProductImage.id+'.jpg'">
+						</td>
 						<td>{{bean.name}}</td>
 						<td>{{bean.subTitle}}</td>
 						<td>{{bean.originalPrice}}</td>
@@ -135,7 +140,9 @@
 							</a>
 						</td>
 						<td>
-							<a href="#nowhere" @click="deleteBean(bean.id)">
+							<a
+								href="#nowhere"
+								@click="deleteBean(bean.id)">
 								<span class="   glyphicon glyphicon-trash"></span>
 							</a>
 						</td>
@@ -153,37 +160,62 @@
 					<tr>
 						<td>产品名称</td>
 						<td>
-							<input @keyup.enter="add" v-model.trim="bean.name" type="text" class="form-control">
+							<input
+								@keyup.enter="add"
+								v-model.trim="bean.name"
+								type="text"
+								class="form-control">
 						</td>
 					</tr>
 					<tr>
 						<td>产品小标题</td>
 						<td>
-							<input @keyup.enter="add" v-model.trim="bean.subTitle" type="text" class="form-control">
+							<input
+								@keyup.enter="add"
+								v-model.trim="bean.subTitle"
+								type="text"
+								class="form-control">
 						</td>
 					</tr>
 					<tr>
 						<td>原价格</td>
 						<td>
-							<input @keyup.enter="add" v-model.trim="bean.originalPrice" type="text" class="form-control">
+							<input
+								@keyup.enter="add"
+								v-model.trim="bean.originalPrice"
+								type="text"
+								class="form-control">
 						</td>
 					</tr>
 					<tr>
 						<td>优惠价格</td>
 						<td>
-							<input @keyup.enter="add" v-model.trim="bean.promotePrice" type="text" class="form-control">
+							<input
+								@keyup.enter="add"
+								v-model.trim="bean.promotePrice"
+								type="text"
+								class="form-control">
 						</td>
 					</tr>
 					<tr>
 						<td>库存</td>
 						<td>
-							<input @keyup.enter="add" v-model.trim="bean.stock" type="text" class="form-control">
+							<input
+								@keyup.enter="add"
+								v-model.trim="bean.stock"
+								type="text"
+								class="form-control">
 						</td>
 					</tr>
 
 					<tr class="submitTR">
-						<td colspan="2" align="center">
-							<a href="#nowhere" @click="add" class="btn btn-success">提交</a>
+						<td
+							colspan="2"
+							align="center">
+							<a
+								href="#nowhere"
+								@click="add"
+								class="btn btn-success">提交</a>
 						</td>
 					</tr>
 				</table>
