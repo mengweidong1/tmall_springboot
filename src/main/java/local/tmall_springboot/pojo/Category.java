@@ -1,11 +1,14 @@
 package local.tmall_springboot.pojo;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -32,6 +35,13 @@ public class Category {
 
     String name;
 
+    // 瞬时字段products和productsByRow
+    @Transient
+    List<Product> products; // 一个分类下有多个产品
+    @Transient
+    List<List<Product>> productsByRow; // 一个分类又对应多个
+                                       // List<Product>，提供这个属性，是为了在首页竖状导航的分类名称右边显示推荐产品列表
+
     public int getId() {
         return id;
     }
@@ -46,5 +56,26 @@ public class Category {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
+
+    public List<List<Product>> getProductsByRow() {
+        return productsByRow;
+    }
+
+    public void setProductsByRow(List<List<Product>> productsByRow) {
+        this.productsByRow = productsByRow;
+    }
+
+    @Override
+    public String toString() {
+        return "Category [id=" + id + ", name=" + name + "]";
     }
 }

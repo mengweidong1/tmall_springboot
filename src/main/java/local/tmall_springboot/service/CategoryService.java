@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import local.tmall_springboot.dao.CategoryDAO;
 import local.tmall_springboot.pojo.Category;
+import local.tmall_springboot.pojo.Product;
 import local.tmall_springboot.util.Page4Navigator;
 
 // 标记这个类是 Service类
@@ -50,5 +51,33 @@ public class CategoryService {
 
     public void update(Category bean) {
         categoryDAO.save(bean);
+    }
+
+    /**
+     * 删除Product对象上的 分类
+     * 
+     * @param cs
+     */
+    public void removeCategoryFromProduct(List<Category> cs) {
+        for (Category category : cs) {
+            removeCategoryFromProduct(category);
+        }
+    }
+
+    public void removeCategoryFromProduct(Category category) {
+        List<Product> products = category.getProducts();
+        if (null != products) {
+            for (Product product : products) {
+                product.setCategory(null);
+            }
+        }
+        List<List<Product>> productsByRow = category.getProductsByRow();
+        if (null != productsByRow) {
+            for (List<Product> ps : productsByRow) {
+                for (Product p : ps) {
+                    p.setCategory(null);
+                }
+            }
+        }
     }
 }
