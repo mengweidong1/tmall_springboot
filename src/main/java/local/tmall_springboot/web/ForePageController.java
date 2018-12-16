@@ -1,5 +1,7 @@
 package local.tmall_springboot.web;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -92,7 +94,9 @@ public class ForePageController {
     }
 
     @GetMapping("/forelogout")
-    public String logout() {
+    public String logout(HttpSession session) {
+        // 在session中去掉"user"
+        session.removeAttribute("user");
         return "redirect:home";
     }
 

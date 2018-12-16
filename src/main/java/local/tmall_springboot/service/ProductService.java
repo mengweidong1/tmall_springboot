@@ -1,5 +1,8 @@
 package local.tmall_springboot.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +22,12 @@ public class ProductService {
     ProductDAO productDAO;
     @Autowired
     CategoryService categoryService;
+    @Autowired
+    ProductImageService productImageService;
+    @Autowired
+    OrderItemService orderItemService;
+    @Autowired
+    ReviewService reviewService;
 
     public void add(Product bean) {
         productDAO.save(bean);
@@ -44,4 +53,59 @@ public class ProductService {
         return new Page4Navigator<>(pageFromJPA, navigatePages);
     }
 
+    // 为分类填充产品集合
+    public void fill(List<Category> categories) {
+        for (Category category : categories) {
+            fill(category);
+        }
+    }
+
+    // 为多个分类填充产品集合
+    public void fill(Category category) {
+        List<Product> products = listByCategory(category);
+        productImageService.setFirstProdutImages(products);
+        category.setProducts(products);
+    }
+
+    // 查询某个分类下的所有产品
+    public List<Product> listByCategory(Category category) {
+        return productDAO.findByCategoryOrderById(category);
+    }
+
+    // 为多个分类填充 推荐产品集合 ， 即把分类下的产品集合，按照8个为一行，拆成多行，便于后续页面上的显示
+    public void fillByRow(List<Category> categories) {
+        int productNumberEachRow = 8;
+        for (Category category : categories) {
+            List<Product> products = category.getProducts();
+            List<List<Product>> productsByRow = new ArrayList<>();
+            for (int i = 0; i < products.size(); i += productNumberEachRow) {
+                int size = i + productNumberEachRow;
+                size = size > products.size() ? products.size() : size;
+                List<Product> productsOfEachRow = products.subList(i, size);
+                productsByRow.add(productsOfEachRow);
+            }
+            category.setProductsByRow(productsByRow);
+        }
+    }
+
+    public void setSaleAndReviewNumber(Product product) {
+        int saleCount = orderItemService.getSaleCount(product);
+        product.setSaleCount(saleCount);
+
+        int reviewCount = reviewService.getCount(product);
+        product.setReviewCount(reviewCount);
+
+    }
+
+    public void setSaleAndReviewNumber(List<Product> products) {
+        for (Product product : products)
+            setSaleAndReviewNumber(product);
+    }
+
+    public List<Product> search(String keyword, int start, int size) {
+        Sort sort = new Sort(Sort.Direction.DESC, "id");
+        Pageable pageable = new PageRequest(start, size, sort);
+        List<Product> products = productDAO.findByNameLike("%" + keyword + "%", pageable);
+        return products;
+    }
 }

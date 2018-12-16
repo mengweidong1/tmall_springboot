@@ -2,6 +2,7 @@ package local.tmall_springboot.web;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import local.tmall_springboot.pojo.Category;
+import local.tmall_springboot.pojo.Product;
 import local.tmall_springboot.service.CategoryService;
 import local.tmall_springboot.util.ImageUtil;
 import local.tmall_springboot.util.Page4Navigator;
@@ -93,5 +95,29 @@ public class CategoryController {
             saveOrUpdateImageFile(bean, image, request);
         }
         return bean;
+    }
+
+    /**
+     * 删除Product对象上的 分类。 因为在对分类做序列还转换为 json 的时候，会遍历里面的 products,
+     * 然后遍历出来的产品上，又会有分类，接着就开始子子孙孙无穷溃矣地遍历了
+     * 
+     * @param category
+     */
+    public void removeCategoryFromProduct(Category category) {
+        List<Product> products = category.getProducts();
+        if (null != products) {
+            for (Product product : products) {
+                product.setCategory(null);
+            }
+        }
+
+        List<List<Product>> productsByRow = category.getProductsByRow();
+        if (null != productsByRow) {
+            for (List<Product> ps : productsByRow) {
+                for (Product p : ps) {
+                    p.setCategory(null);
+                }
+            }
+        }
     }
 }

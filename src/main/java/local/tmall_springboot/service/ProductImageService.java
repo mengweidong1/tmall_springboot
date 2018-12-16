@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import local.tmall_springboot.dao.ProductImageDAO;
+import local.tmall_springboot.pojo.OrderItem;
 import local.tmall_springboot.pojo.Product;
 import local.tmall_springboot.pojo.ProductImage;
 
@@ -56,4 +57,9 @@ public class ProductImageService {
             setFirstProdutImage(product);
     }
 
+    public void setFirstProdutImagesOnOrderItems(List<OrderItem> ois) {
+        for (OrderItem orderItem : ois) {
+            setFirstProdutImage(orderItem.getProduct());
+        }
+    }
 }
