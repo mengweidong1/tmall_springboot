@@ -252,4 +252,14 @@ public class ForeRESTController {
         buyoneAndAddCart(pid, num, session);
         return Result.success();
     }
+
+    @GetMapping("forecart")
+    public Object cart(HttpSession session) {
+        // 通过session获取当前用户
+        // 一定要登录才访问，否则拿不到用户对象,会报错
+        User user = (User) session.getAttribute("user");
+        List<OrderItem> ois = orderItemService.listByUser(user);
+        productImageService.setFirstProdutImagesOnOrderItems(ois);
+        return ois;
+    }
 }
