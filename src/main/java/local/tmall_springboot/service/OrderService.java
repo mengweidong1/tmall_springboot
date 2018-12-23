@@ -8,10 +8,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import local.tmall_springboot.dao.OrderDAO;
 import local.tmall_springboot.pojo.Order;
 import local.tmall_springboot.pojo.OrderItem;
+import local.tmall_springboot.pojo.User;
 import local.tmall_springboot.util.Page4Navigator;
 
 @Service
@@ -25,6 +28,8 @@ public class OrderService {
 
     @Autowired
     OrderDAO orderDAO;
+    @Autowired
+    OrderItemService orderItemService;
 
     public Page4Navigator<Order> list(int start, int size, int navigatePages) {
         Sort sort = new Sort(Sort.Direction.DESC, "id");
@@ -47,7 +52,7 @@ public class OrderService {
      * 就这样就会产生无穷递归，系统就会报错了。 如果标记成了 @JsonIgnoreProperties 会在和 Redis 整合的时候有 Bug,
      * 所以还是采用这种方式比较好。
      */
-    private void removeOrderFromOrderItem(Order order) {
+    public void removeOrderFromOrderItem(Order order) {
         List<OrderItem> orderItems = order.getOrderItems();
         for (OrderItem orderItem : orderItems) {
             orderItem.setOrder(null);
@@ -62,4 +67,43 @@ public class OrderService {
         orderDAO.save(bean);
     }
 
+    @Transactional(propagation = Propagation.REQUIRED, rollbackForClassName = "Exception")
+    public float add(Order order, List<OrderItem> ois) {
+        float total = 0;
+        add(order);
+
+        if (false)
+            throw new RuntimeException();
+
+        for (OrderItem oi : ois) {
+            oi.setOrder(order);
+            orderItemService.update(oi);
+            total += oi.getProduct().getPromotePrice() * oi.getNumber();
+        }
+        return total;
+    }
+
+    public void add(Order order) {
+        orderDAO.save(order);
+    }
+
+    public List<Order> listByUserWithoutDelete(User user) {
+        List<Order> orders = listByUserAndNotDeleted(user);
+        orderItemService.fill(orders);
+        return orders;
+    }
+
+    public List<Order> listByUserAndNotDeleted(User user) {
+        return orderDAO.findByUserAndStatusNotOrderByIdDesc(user, OrderService.delete);
+    }
+
+    // 计算订单总金额
+    public void cacl(Order o) {
+        List<OrderItem> orderItems = o.getOrderItems();
+        float total = 0;
+        for (OrderItem orderItem : orderItems) {
+            total += orderItem.getProduct().getPromotePrice() * orderItem.getNumber();
+        }
+        o.setTotal(total);
+    }
 }

@@ -5,10 +5,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-
-import local.tmall_springboot.pojo.User;
 
 public class LoginInterceptor implements HandlerInterceptor {
     @Override
@@ -34,8 +34,11 @@ public class LoginInterceptor implements HandlerInterceptor {
         // 判断是否是以 requireAuthPages 里的开头的
         if (begingWith(page, requireAuthPages)) {
             // 如果是就判断是否登陆，未登陆就跳转到 login 页面
-            User user = (User) session.getAttribute("user");
-            if (user == null) {
+            // User user = (User) session.getAttribute("user");
+            // 拦截器里会判断是否登陆，切换为 Shiro 方式：subject.isAuthenticated()
+            Subject subject = SecurityUtils.getSubject();
+            if (!subject.isAuthenticated()) {
+                // if (user == null) {
                 httpServletResponse.sendRedirect("login");
                 return false;
             }
