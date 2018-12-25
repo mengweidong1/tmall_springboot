@@ -26,7 +26,8 @@ public class ShiroConfiguration {
     }
 
     /**
-     * 设置过滤器
+     * ShiroFilterFactoryBean 处理拦截资源文件问题。注意：单独一个ShiroFilterFactoryBean配置是或报错的，
+     * 因为在初始化ShiroFilterFactoryBean的时候需要注入：SecurityManager
      * 
      * @param securityManager
      * @return
@@ -65,8 +66,9 @@ public class ShiroConfiguration {
     @Bean
     public HashedCredentialsMatcher hashedCredentialsMatcher() {
         HashedCredentialsMatcher hashedCredentialsMatcher = new HashedCredentialsMatcher();
-        hashedCredentialsMatcher.setHashAlgorithmName("md5");
-        hashedCredentialsMatcher.setHashIterations(2);
+        hashedCredentialsMatcher.setHashAlgorithmName("md5"); // 散列算法:这里使用MD5算法;
+        hashedCredentialsMatcher.setHashIterations(2); // 散列的次数，比如散列两次，相当于
+                                                       // md5(md5(""));
         return hashedCredentialsMatcher;
     }
 

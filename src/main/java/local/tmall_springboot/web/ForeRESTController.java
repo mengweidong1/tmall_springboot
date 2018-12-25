@@ -142,15 +142,6 @@ public class ForeRESTController {
         // }
     }
 
-    // 通过 subject.logout 退出。
-    @GetMapping("/forelogout")
-    public String logout() {
-        Subject subject = SecurityUtils.getSubject();
-        if (subject.isAuthenticated())
-            subject.logout();
-        return "redirect:home";
-    }
-
     @GetMapping("/foreproduct/{pid}")
     public Object product(@PathVariable("pid") int pid) {
         Product product = productService.get(pid);

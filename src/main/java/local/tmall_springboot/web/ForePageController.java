@@ -1,7 +1,7 @@
 package local.tmall_springboot.web;
 
-import javax.servlet.http.HttpSession;
-
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -93,11 +93,12 @@ public class ForePageController {
         return "fore/search";
     }
 
+    // 通过 subject.logout 退出。
     @GetMapping("/forelogout")
-    public String logout(HttpSession session) {
-        // 在session中去掉"user"
-        session.removeAttribute("user");
+    public String logout() {
+        Subject subject = SecurityUtils.getSubject();
+        if (subject.isAuthenticated())
+            subject.logout();
         return "redirect:home";
     }
-
 }

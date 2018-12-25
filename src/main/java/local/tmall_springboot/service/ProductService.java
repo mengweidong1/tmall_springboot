@@ -3,14 +3,22 @@ package local.tmall_springboot.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
 
 import local.tmall_springboot.dao.ProductDAO;
+import local.tmall_springboot.es.ProductESDAO;
 import local.tmall_springboot.pojo.Category;
 import local.tmall_springboot.pojo.Product;
 import local.tmall_springboot.util.Page4Navigator;
@@ -28,23 +36,34 @@ public class ProductService {
     OrderItemService orderItemService;
     @Autowired
     ReviewService reviewService;
+    @Autowired
+    ProductESDAO productESDAO;
 
+    // 增加，删除，修改的时候，除了通过 ProductDAO 对数据库产生影响之外，还要通过 ProductESDAO 同步到 es.
+    @CacheEvict(allEntries = true)
     public void add(Product bean) {
         productDAO.save(bean);
+        productESDAO.save(bean);
     }
 
+    @CacheEvict(allEntries = true)
     public void delete(int id) {
         productDAO.delete(id);
+        productESDAO.delete(id);
     }
 
+    @Cacheable(key = "'products-one-'+ #p0")
     public Product get(int id) {
         return productDAO.findOne(id);
     }
 
+    @CacheEvict(allEntries = true)
     public void update(Product bean) {
         productDAO.save(bean);
+        productESDAO.save(bean);
     }
 
+    @Cacheable(key = "'products-cid-'+#p0+'-page-'+#p1 + '-' + #p2 ")
     public Page4Navigator<Product> list(int cid, int start, int size, int navigatePages) {
         Category category = categoryService.get(cid);
         Sort sort = new Sort(Sort.Direction.DESC, "id");
@@ -68,6 +87,7 @@ public class ProductService {
     }
 
     // 查询某个分类下的所有产品
+    @Cacheable(key = "'products-cid-'+ #p0.id")
     public List<Product> listByCategory(Category category) {
         return productDAO.findByCategoryOrderById(category);
     }
@@ -102,10 +122,34 @@ public class ProductService {
             setSaleAndReviewNumber(product);
     }
 
+    // 以前查询是模糊查询，现在通过 ProductESDAO 到 elasticsearch 中进行查询了。
     public List<Product> search(String keyword, int start, int size) {
+        initDatabase2ES();
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = QueryBuilders.functionScoreQuery()
+                .add(QueryBuilders.matchPhraseQuery("name", keyword), ScoreFunctionBuilders.weightFactorFunction(100))
+                .scoreMode("sum").setMinScore(10);
         Sort sort = new Sort(Sort.Direction.DESC, "id");
         Pageable pageable = new PageRequest(start, size, sort);
-        List<Product> products = productDAO.findByNameLike("%" + keyword + "%", pageable);
-        return products;
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withPageable(pageable)
+                .withQuery(functionScoreQueryBuilder).build();
+        // List<Product> products = productDAO.findByNameLike("%" + keyword +
+        // "%", pageable);
+        // return products;
+        Page<Product> page = productESDAO.search(searchQuery);
+        return page.getContent();
+    }
+
+    /**
+     * 初始化数据到es. 因为数据刚开始都在数据库中，不在es中，所以刚开始查询，先看看es有没有数据，如果没有，就把数据从数据库同步到es中。
+     */
+    private void initDatabase2ES() {
+        Pageable pageable = new PageRequest(0, 5);
+        Page<Product> page = productESDAO.findAll(pageable);
+        if (page.getContent().isEmpty()) {
+            List<Product> products = productDAO.findAll();
+            for (Product product : products) {
+                productESDAO.save(product);
+            }
+        }
     }
 }
